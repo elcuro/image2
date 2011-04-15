@@ -1,0 +1,9 @@
+name: Image2
+description: Modification of Image helper boundled with Croogo, added crop and cropResize feature
+
+author: Juraj Jancuska
+authorEmail: jjancuska@gmail.com
+authorUrl: 
+
+dependencies:
+  plugins:
