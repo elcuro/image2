@@ -104,6 +104,7 @@ class Image2Helper extends Helper {
                 if (!$cached) {
                         $image = call_user_func('imagecreatefrom'.$types[$size[2]], $url);
                         if (function_exists("imagecreatetruecolor") && ($temp = imagecreatetruecolor ($width, $height))) {
+                                imagecolortransparent($temp, imagecolorallocate($temp, 0, 0, 0));
                                 imagecopyresampled ($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $size[0], $size[1]);
                         } else {
                                 $temp = imagecreate ($width, $height);
