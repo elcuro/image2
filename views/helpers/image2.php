@@ -22,17 +22,22 @@ class Image2Helper extends Helper {
         * @param string $method resize method (resize, resizeRatio, resizeCrop, crop)
         * @param array    $htmlAttributes Array of HTML attributes.
         * @param boolean $return Wheter this method should return a value or output it. This overrides AUTO_OUTPUT.
+        * @param boolean $server_path Local server path to file
         * @return mixed    Either string or echos the value, depends on AUTO_OUTPUT and $return.
         * @access public
         */
-        public function resize($path, $width, $height, $method = 'resizeRatio', $htmlAttributes = array(), $return = false) {
+        public function resize($path, $width, $height, $method = 'resizeRatio', $htmlAttributes = array(), $return = false, $server_path = false) {
                 $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp"); // used to determine image type
                 if(empty($htmlAttributes['alt'])) $htmlAttributes['alt'] = 'thumb';  // Ponemos alt default
 
                 $uploadsDir = 'uploads';
 
                 $fullpath = ROOT.DS.APP_DIR.DS.WEBROOT_DIR.DS.$uploadsDir.DS;
-                $url = ROOT.DS.APP_DIR.DS.WEBROOT_DIR.DS.$path;
+                if (!$server_path) {
+                        $url = ROOT.DS.APP_DIR.DS.WEBROOT_DIR.DS.$path;
+                } else {
+                        $url = $server_path;
+                }
 
                 if (!($size = getimagesize($url))) // $size[0]:width, [1]:height, [2]:type
                         return; // image doesn't exist
@@ -97,12 +102,6 @@ class Image2Helper extends Helper {
                 }
 
                 if (!$cached) {
-                        $resize = true;
-                } else {
-                        $resize = false;
-                }
-
-                if ($resize) {
                         $image = call_user_func('imagecreatefrom'.$types[$size[2]], $url);
                         if (function_exists("imagecreatetruecolor") && ($temp = imagecreatetruecolor ($width, $height))) {
                                 imagecopyresampled ($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $size[0], $size[1]);
