@@ -1,0 +1,11 @@
+{
+	"name": "Image2",
+	"description": "Helper for resizing and croping images",
+
+	"author": "Juraj Jancuska",
+	"authorEmail": "jjancuska@gmail.com",
+	"authorUrl": "",
+
+	"dependencies": {
+	}
+}
