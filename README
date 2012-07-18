@@ -3,6 +3,8 @@ Croogo Ggeo  plugin
 Modification of original Image helper boundled with Croogo.
 Automatically resize or crop an image and returns formatted IMG tag
 
+!!! v0.1 is only for Croogo to v1.3
+
 Usage
 ------------------------------
 $this->Image2->resize($path, $width, $height, $method = 'resizeRatio', $htmlAttributes = array(), $return = false);
