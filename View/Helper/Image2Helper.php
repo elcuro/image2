@@ -89,7 +89,7 @@ class Image2Helper extends Helper {
                                 
                 }
 
-                $relfile = $this->webroot.$uploadsDir.'/'.$this->cacheDir.'/'.$method_short.'_'.$width.'x'.$height.'_'.basename($path); // relative file
+                $relfile = '/'.$uploadsDir.'/'.$this->cacheDir.'/'.$method_short.'_'.$width.'x'.$height.'_'.basename($path); // relative file
                 $cachefile = $fullpath.$this->cacheDir.DS.$method_short.'_'.$width.'x'.$height.'_'.basename($path);  // location on server
 
                 if (file_exists($cachefile)) {
@@ -103,7 +103,7 @@ class Image2Helper extends Helper {
                 }
 
                 if (!$cached) {
-                        $image = call_user_func('imagecreatefrom'.$types[$size[2]], $url);
+                        $image = call_user_func('imagecreatefrom'.$types[$size[2]], $url);                        
                         if (function_exists("imagecreatetruecolor") && ($temp = imagecreatetruecolor ($width, $height))) {
                                 imagecolortransparent($temp, imagecolorallocate($temp, 0, 0, 0));
                                 imagecopyresampled ($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $size[0], $size[1]);
@@ -118,7 +118,8 @@ class Image2Helper extends Helper {
                         //copy($url, $cachefile);
                 }
 
-                return $this->output(sprintf($this->Html->tags['image'], $relfile, $this->Html->_parseAttributes($htmlAttributes, null, '', ' ')), $return);
+                return $this->Html->image($relfile, $htmlAttributes);
+
         }
 }
 ?>
