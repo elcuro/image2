@@ -1,7 +1,9 @@
-Croogo Ggeo  plugin
+Croogo Image2  plugin for Croogo 1.4 above!!
 ------------------------------
 Modification of original Image helper boundled with Croogo.
-Automatically resize or crop an image and returns formatted IMG tag
+Automatically resize or crop (also cache) image and returns formatted IMG tag
+
+For use this plugin with previous versions of Croogo, switch branch to 0.1
 
 Usage
 ------------------------------
