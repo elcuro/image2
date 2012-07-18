@@ -7,6 +7,7 @@
  * @version 1.1
  * @author Josh Hundley
  * @author Jorge Orpinel <jop@levogiro.net> (changes)
+ * @author Juraj Jancuska <jjancuska@gmail.com> (minor changes)
  */
 class Image2Helper extends Helper {
 
