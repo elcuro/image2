@@ -22,8 +22,8 @@ class Image2Helper extends Helper {
         * @param integer $height Height of returned image
         * @param string $method resize method (resize, resizeRatio, resizeCrop, crop)
         * @param array    $htmlAttributes Array of HTML attributes.
-        * @param boolean $return Wheter this method should return a value or output it. This overrides AUTO_OUTPUT.
-        * @param boolean $server_path Local server path to file
+        * @param boolean $return Wheter this method should return a value or output it. This overrides AUTO_OUTPUT. (!!! DEPRECATED, NOT USED)
+        * @param string $server_path Local server path to file
         * @return mixed    Either string or echos the value, depends on AUTO_OUTPUT and $return.
         * @access public
         */
