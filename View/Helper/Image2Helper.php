@@ -22,13 +22,15 @@ class Image2Helper extends Helper {
        
        /**
         * Cache dir for "resize" method, relative to 'img'.DS
-        *
+        * retained for backward compatibility
+        * 
         * @var array
         */       
        public $cacheDir = 'resized'; 
 
        /**
         * Automatically resize (crop) an image and returns formatted IMG tag,
+        * retained for backward compatibility
         *
         * @param string $path Path to the image file, relative to the webroot/img/ directory.
         * @param integer $width Image of returned image
