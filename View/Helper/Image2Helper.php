@@ -1,4 +1,5 @@
 <?php
+
 /**
  *
  * Modification of orignal Image helper boundled with Croogo
@@ -19,36 +20,36 @@ class Image2Helper extends AppHelper {
        public $helpers = array(
            'Html'
        );
-       
+
        /**
         * Cache filename
         * 
         * @var string
-        */       
-       protected $_cacheFilename = false;    
-       
+        */
+       protected $_cacheServerPath = false;
+
        /**
         * Original image sizes
         * 
         * @var array
-        */       
-       public $sizes = false;       
-       
+        */
+       public $sizes = false;
+
        /**
         * Server path
         * 
         * @var string
-        */       
-       public $serverPath = false;         
-       
+        */
+       public $serverPath = false;
+
        /**
         * Cache dir for "resize" method, relative to 'img'.DS
         * retained for backward compatibility
         * 
         * @var array
-        */       
-       public $cacheDir = 'resized'; 
-       
+        */
+       public $cacheDir = 'resized';
+
        /**
         * Load image
         *
@@ -57,19 +58,20 @@ class Image2Helper extends AppHelper {
         * @return object $this
         */
        public function source($path = '', $absolute = false) {
-              
+
               $this->sizes = false;
               $this->serverPath = false;
-              
+              $this->_cacheServerPath = false;
+
               if (!$absolute) {
-                     $path = ROOT.DS.APP_DIR.DS.WEBROOT_DIR.DS.$path;
+                     $path = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $path;
               }
               if ($this->sizes = @getimagesize($path)) {
-                     $this->serverPath = $path;                                          
-              } 
+                     $this->serverPath = $path;
+              }
               return $this;
        }
-       
+
        /**
         * Resize image
         *
@@ -79,9 +81,21 @@ class Image2Helper extends AppHelper {
         * @return object
         */
        public function resizeit($width, $height, $ratio = true) {
-              
+
+              if ($this->_cacheServerPath) {
+                     $this->source($this->_cacheServerPath, true);
+              }
+              if ($ratio) {
+                     if (($this->sizes[1] / $height) > ($this->sizes[0] / $width)) {
+                            $width = ceil(($this->sizes[0] / $this->sizes[1]) * $height);
+                     } else {
+                            $height = ceil($width / ($this->sizes[0] / $this->sizes[1]));
+                     }
+              }
+              $this->_nativeResize(0, 0, $width, $height, 'resize');
+              return $this;
        }
-       
+
        /**
         * Crop image
         * 
@@ -91,9 +105,71 @@ class Image2Helper extends AppHelper {
         * @return object
         */
        public function crop($width, $height, $resize = true) {
-              
+
+              if ($this->_cacheServerPath) {
+                     $this->source($this->_cacheServerPath, true);
+              }
+              if ($resize) {
+                     $ratio_x = $width / $this->sizes[0];
+                     $ratio_y = $height / $this->sizes[1];
+                     if (($ratio_y) > ($ratio_x)) {
+                            $start_x = round(($this->sizes[0] - ($width / $ratio_y)) / 2);
+                            $start_y = 0;
+                            $this->sizes[0] = round($width / $ratio_y);
+                     } else {
+                            $start_x = 0;
+                            $start_y = round(($this->sizes[1] - ($height / $ratio_x)) / 2);
+                            $this->sizes[1] = round($height / $ratio_x);
+                     }
+              } else {
+                     $start_x = ($this->sizes[0] - $width) / 2;
+                     $start_y = ($this->sizes[1] - $height) / 2;
+                     $this->sizes[0] = $width;
+                     $this->sizes[1] = $height;
+              }
+              $this->_nativeResize($start_x, $start_y, $width, $height, 'crop');
+              return $this;              
        }
-       
+
+       /**
+        * Resample or resize and cache
+        *
+        * @param int $start_x;
+        * @param int $start_y;
+        * @param int $width;
+        * @param int $height
+        * @return void
+        */
+       protected function _nativeResize($start_x, $start_y, $width, $height, $method = 'na') {
+
+              $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
+              $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir . DS;
+
+              $cache_path = $cache_dir . implode('_', array($start_x, $start_y, $width, $height, $method, basename($this->serverPath)));
+              if (file_exists($cache_path)) {
+                     if (@filemtime($cache_path) >= @filemtime($this->serverPath)) {// check if up to date
+                            $this->_cacheServerPath = $cache_path;
+                     }
+              }
+
+              if (!$this->_cacheServerPath) {
+                     $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp"); // used to determine image type
+                     $image = call_user_func('imagecreatefrom' . $types[$this->sizes[2]], $this->serverPath);
+                     if (function_exists("imagecreatetruecolor") && ($temp = imagecreatetruecolor($width, $height))) {
+                            imagecolortransparent($temp, imagecolorallocate($temp, 0, 0, 0));
+                            imagecopyresampled($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $this->sizes[0], $this->sizes[1]);
+                     } else {
+                            $temp = imagecreate($width, $height);
+                            imagecopyresized($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $this->sizes[0], $this->sizes[1]);
+                     }
+                     if (call_user_func("image" . $types[$this->sizes[2]], $temp, $cache_path)) {
+                            imagedestroy($image);
+                            imagedestroy($temp);
+                            $this->_cacheServerPath = $cache_path;
+                     }
+              }
+       }
+
        /**
         * Add watermark
         *
