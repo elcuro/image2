@@ -4,12 +4,12 @@
  * Modification of orignal Image helper boundled with Croogo
  * 
  *
- * @version 1.1
+ * @version 1.42
  * @author Josh Hundley
  * @author Jorge Orpinel <jop@levogiro.net> (changes)
  * @author Juraj Jancuska <jjancuska@gmail.com> (minor changes)
  */
-class Image2Helper extends Helper {
+class Image2Helper extends AppHelper {
 
        /**
         * Used helpers
@@ -21,12 +21,89 @@ class Image2Helper extends Helper {
        );
        
        /**
+        * Cache filename
+        * 
+        * @var string
+        */       
+       protected $_cacheFilename = false;    
+       
+       /**
+        * Original image sizes
+        * 
+        * @var array
+        */       
+       public $sizes = false;       
+       
+       /**
+        * Server path
+        * 
+        * @var string
+        */       
+       public $serverPath = false;         
+       
+       /**
         * Cache dir for "resize" method, relative to 'img'.DS
         * retained for backward compatibility
         * 
         * @var array
         */       
        public $cacheDir = 'resized'; 
+       
+       /**
+        * Load image
+        *
+        * @param string $path Path to image relative to webroot
+        * @param boolean $absolute Path is absolute server path
+        * @return object $this
+        */
+       public function source($path = '', $absolute = false) {
+              
+              $this->sizes = false;
+              $this->serverPath = false;
+              
+              if (!$absolute) {
+                     $path = ROOT.DS.APP_DIR.DS.WEBROOT_DIR.DS.$path;
+              }
+              if ($this->sizes = @getimagesize($path)) {
+                     $this->serverPath = $path;                                          
+              } 
+              return $this;
+       }
+       
+       /**
+        * Resize image
+        *
+        * @param integer $width
+        * @param integer $height
+        * @param boolean $ratio
+        * @return object
+        */
+       public function resizeit($width, $height, $ratio = true) {
+              
+       }
+       
+       /**
+        * Crop image
+        * 
+        * @param integer $width
+        * @param integer $height
+        * @param boolean $resize Resize image before croping
+        * @return object
+        */
+       public function crop($width, $height, $resize = true) {
+              
+       }
+       
+       /**
+        * Add watermark
+        *
+        * @param string $image Watermark image
+        * @param array $options
+        * @return object
+        */
+       public function watermark($image, $options = array()) {
+              
+       }
 
        /**
         * Automatically resize (crop) an image and returns formatted IMG tag,
