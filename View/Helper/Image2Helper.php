@@ -200,6 +200,7 @@ class Image2Helper extends AppHelper {
                       . basename($original_path);
               if (file_exists($cache_path)) {
                      if (@filemtime($cache_path) > @filemtime($original_path)) {// check if up to date
+                            $this->_cacheServerPath = $cache_path;
                             return $this;
                      }
               }
