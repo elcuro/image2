@@ -128,7 +128,7 @@ class Image2Helper extends AppHelper {
                      $this->sizes[1] = $height;
               }
               $this->_nativeResize($start_x, $start_y, $width, $height, 'crop');
-              return $this;              
+              return $this;
        }
 
        /**
@@ -156,8 +156,16 @@ class Image2Helper extends AppHelper {
                      $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp"); // used to determine image type
                      $image = call_user_func('imagecreatefrom' . $types[$this->sizes[2]], $this->serverPath);
                      if (function_exists("imagecreatetruecolor") && ($temp = imagecreatetruecolor($width, $height))) {
-                            imagecolortransparent($temp, imagecolorallocate($temp, 0, 0, 0));
-                            imagecopyresampled($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $this->sizes[0], $this->sizes[1]);
+                            if (function_exists('imagecolorallocatealpha')) {
+                                   imagealphablending($temp, false);
+                                   imagesavealpha($temp, true);
+                                   $transparent = imagecolorallocatealpha($temp, 255, 255, 255, 127);
+                                   imagefilledrectangle($temp, 0, 0, $this->sizes[0], $this->sizes[1], $transparent);
+                                   imagecopyresampled($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $this->sizes[0], $this->sizes[1]);
+                            } else {
+                                   imagecolortransparent($temp, imagecolorallocate($temp, 0, 0, 0));
+                                   imagecopyresampled($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $this->sizes[0], $this->sizes[1]);
+                            }
                      } else {
                             $temp = imagecreate($width, $height);
                             imagecopyresized($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $this->sizes[0], $this->sizes[1]);
@@ -166,6 +174,7 @@ class Image2Helper extends AppHelper {
                             imagedestroy($image);
                             imagedestroy($temp);
                             $this->_cacheServerPath = $cache_path;
+                            $this->sizes = @getimagesize($cache_path);
                      }
               }
        }
@@ -173,14 +182,69 @@ class Image2Helper extends AppHelper {
        /**
         * Add watermark
         *
-        * @param string $image Watermark image
-        * @param array $options
+        * @param string $watermark_image Watermark PNG image path related to webroot e.g. img/watermark.png
+        * @param string $position (center, more will be added shortly)
         * @return object
         */
-       public function watermark($image, $options = array()) {
-              
-       }
+       public function watermark($watermark_image, $position = 'center') {
 
+              $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp"); // used to determine image type                    
+              $original_path = $this->_cacheServerPath;
+              $original_sizes = $this->sizes;
+
+              $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
+              $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir . DS;
+              $cache_path = $cache_dir . Inflector::slug(basename($watermark_image)) . '_' . $position . '_'
+                      . basename($original_path);
+              if (file_exists($cache_path)) {
+                     if (@filemtime($cache_path) > @filemtime($original_path)) {// check if up to date
+                            return $this;
+                     }
+              }
+
+              switch ($position) {
+                     case "center":
+                            $watermark_width = ceil($original_sizes[0] * 0.7);
+                            $watermark_height = ceil($original_sizes[1] * 0.7);
+                            $watermark_x = 5;
+                            $watermark_y = 5;
+                            break;
+              }
+              
+              $this->source($watermark_image);
+              $this->resizeit($watermark_width, $watermark_height);
+              $watermark_path = $this->_cacheServerPath;
+              $watermark_sizes = $this->sizes;
+
+              $watermark = imagecreatefrompng($watermark_path);
+              $original = call_user_func('imagecreatefrom' . $types[$original_sizes[2]], $original_path);
+
+              imagealphablending($original, true);
+              imagealphablending($watermark, false);
+              imagesavealpha($watermark, true);
+
+              imagecopy($original, $watermark, $watermark_x, $watermark_y, 0, 0, $watermark_sizes[0], $watermark_sizes[1]);
+              if (call_user_func("image" . $types[$original_sizes[2]], $original, $cache_path)) {
+                     imagedestroy($watermark);
+                     imagedestroy($original);
+              }
+
+              $this->_cacheServerPath = $cache_path;
+              $this->sizes = $original_sizes;
+              return $this;
+       }
+       
+       /**
+        * return filename in relative path for 
+        *
+        * @return string
+        */
+       public function imagePath() {
+              
+              $cache_dir = implode('/', Configure::read('Image2.cacheDir'));
+              return $cache_dir.'/'.basename($this->_cacheServerPath);
+       }
+       
        /**
         * Automatically resize (crop) an image and returns formatted IMG tag,
         * retained for backward compatibility

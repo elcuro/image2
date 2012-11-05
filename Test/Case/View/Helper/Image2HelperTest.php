@@ -26,6 +26,11 @@ class Image2HelperTest extends CakeTestCase {
               $this->View = new View($Controller);
               $this->Image2Helper = new Image2Helper($this->View);
        }
+       
+       public function testGd() {
+              
+              $this->assertTrue((extension_loaded('gd') || extension_loaded('gd2')));
+       }
 
        public function testSource() {
 
@@ -87,8 +92,7 @@ class Image2HelperTest extends CakeTestCase {
               $this->assertTrue(file_exists($expected_file));
               $this->assertEquals(200, $sizes[0]);
               $this->assertEquals(100, $sizes[1]);              
-       }   
-       
+       }          
        
        public function testChain() {
               
@@ -112,7 +116,44 @@ class Image2HelperTest extends CakeTestCase {
               $this->assertTrue(file_exists($expected_file_crop));
               $this->assertEquals(200, $sizes[0]);
               $this->assertEquals(200, $sizes[1]);                
-       }         
+       }        
+       
+       public function testWatermark() {
+              
+              $this->assertInternalType('object', 
+                      $this->Image2Helper->source('img/screenshot.png')
+                            ->resizeit(500, 500, false)
+                            ->watermark('img/croogo.png')
+              );
+              
+              $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
+              $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir .DS;              
+              $expected_file = $cache_dir . 'croogo_png_center_0_0_500_500_resize_screenshot.png';
+              $sizes = @getimagesize($expected_file);
+              $this->assertTrue(file_exists($expected_file));
+              $this->assertEquals(500, $sizes[0]);
+              $this->assertEquals(500, $sizes[1]);              
+       }      
+       
+       public function testImagePath() {
+              
+              $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
+              $cache_dir_relative = implode('/', Configure::read('Image2.cacheDir')).'/';
+              
+              $this->assertEquals($cache_dir_relative.'0_0_220_220_resize_screenshot.png', 
+                      $this->Image2Helper->source('img/screenshot.png')
+                            ->resizeit(220, 220, false)
+                            ->imagePath()
+              );
+              
+              $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
+              $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir .DS;              
+              $expected_file = $cache_dir . '0_0_220_220_resize_screenshot.png';
+              $sizes = @getimagesize($expected_file);
+              $this->assertTrue(file_exists($expected_file));
+              $this->assertEquals(220, $sizes[0]);
+              $this->assertEquals(220, $sizes[1]);                  
+       }
 
        public function tearDown() {
               parent::tearDown();
