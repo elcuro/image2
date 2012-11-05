@@ -149,6 +149,7 @@ class Image2Helper extends AppHelper {
               if (file_exists($cache_path)) {
                      if (@filemtime($cache_path) >= @filemtime($this->serverPath)) {// check if up to date
                             $this->_cacheServerPath = $cache_path;
+                            $this->sizes = @getimagesize($cache_path);                            
                      }
               }
 
@@ -183,7 +184,7 @@ class Image2Helper extends AppHelper {
         * Add watermark
         *
         * @param string $watermark_image Watermark PNG image path related to webroot e.g. img/watermark.png
-        * @param string $position (center, more will be added shortly)
+        * @param string $position (center, overlay, more will be added shortly)
         * @return object
         */
        public function watermark($watermark_image, $position = 'center') {
@@ -203,16 +204,26 @@ class Image2Helper extends AppHelper {
               }
 
               switch ($position) {
+                     
                      case "center":
                             $watermark_width = ceil($original_sizes[0] * 0.7);
                             $watermark_height = ceil($original_sizes[1] * 0.7);
                             $watermark_x = 5;
                             $watermark_y = 5;
+                            $watermark_ratio = true;
+                            break;
+                     
+                     case "overlay":
+                            $watermark_width = $original_sizes[0];
+                            $watermark_height = $original_sizes[1];
+                            $watermark_x = 0;
+                            $watermark_y = 0;
+                            $watermark_ratio = false;
                             break;
               }
               
               $this->source($watermark_image);
-              $this->resizeit($watermark_width, $watermark_height);
+              $this->resizeit($watermark_width, $watermark_height, $watermark_ratio);
               $watermark_path = $this->_cacheServerPath;
               $watermark_sizes = $this->sizes;
 

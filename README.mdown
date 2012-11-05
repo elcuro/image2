@@ -53,6 +53,7 @@ Watermark image in PNG format, support foralpha channel.
 
 Positions:
  * center - center of the image, long size 70% of original image long side
+ * overlay - watermark image is resized to equal sizes as original
  * left bottom - not implemented yet
  * right bottom - not implemented yet
  * left top - not implemented yet 
