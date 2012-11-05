@@ -254,7 +254,7 @@ class Image2Helper extends AppHelper {
        public function imagePath() {
               
               $cache_dir = implode('/', Configure::read('Image2.cacheDir'));
-              return $cache_dir.'/'.basename($this->_cacheServerPath);
+              return '/'.$cache_dir.'/'.basename($this->_cacheServerPath);
        }
        
        /**

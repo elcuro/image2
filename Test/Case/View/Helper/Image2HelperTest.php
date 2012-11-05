@@ -172,7 +172,7 @@ class Image2HelperTest extends CakeTestCase {
        public function testImagePath() {
               
               $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
-              $cache_dir_relative = implode('/', Configure::read('Image2.cacheDir')).'/';
+              $cache_dir_relative = '/'.implode('/', Configure::read('Image2.cacheDir')).'/';
               
               $this->assertEquals($cache_dir_relative.'0_0_220_220_resize_screenshot.png', 
                       $this->Image2Helper->source('img/screenshot.png')
