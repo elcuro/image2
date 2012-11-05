@@ -185,9 +185,10 @@ class Image2Helper extends AppHelper {
         *
         * @param string $watermark_image Watermark PNG image path related to webroot e.g. img/watermark.png
         * @param string $position (center, overlay, more will be added shortly)
+        * @param boolean $watermark_absolute true if is watermark path server absolute
         * @return object
         */
-       public function watermark($watermark_image, $position = 'center') {
+       public function watermark($watermark_image, $position = 'center', $watermark_absolute = false) {
 
               $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp"); // used to determine image type                    
               $original_path = $this->_cacheServerPath;
@@ -222,7 +223,7 @@ class Image2Helper extends AppHelper {
                             break;
               }
               
-              $this->source($watermark_image);
+              $this->source($watermark_image, $watermark_absolute);
               $this->resizeit($watermark_width, $watermark_height, $watermark_ratio);
               $watermark_path = $this->_cacheServerPath;
               $watermark_sizes = $this->sizes;

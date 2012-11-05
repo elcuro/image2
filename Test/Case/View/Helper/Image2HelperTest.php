@@ -135,6 +135,24 @@ class Image2HelperTest extends CakeTestCase {
               $this->assertEquals(500, $sizes[1]);              
        }      
        
+       public function testWatermarkAbsolutePath() {
+              
+              $path = WWW_ROOT.'img'.DS.'croogo.png';
+              $this->assertInternalType('object', 
+                      $this->Image2Helper->source('img/screenshot.png')
+                            ->resizeit(333, 333, false)
+                            ->watermark($path, 'center', true)
+              );
+              
+              $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
+              $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir .DS;              
+              $expected_file = $cache_dir . 'croogo_png_center_0_0_333_333_resize_screenshot.png';
+              $sizes = @getimagesize($expected_file);
+              $this->assertTrue(file_exists($expected_file));
+              $this->assertEquals(333, $sizes[0]);
+              $this->assertEquals(333, $sizes[1]);              
+       }         
+       
        public function testWatermarkOverlay() {
               
               $this->assertInternalType('object', 

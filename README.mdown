@@ -46,9 +46,15 @@ Resize image to longest side and then crop
 
 Watermark image in PNG format, support foralpha channel.
 
+       $this-Image2->watermark($watermark_image, $position, $watermark_absolute)
+
+ * $watermark_image = path to watermark image
+ * $position = position of watermark
+ * $watermark_absolute = true if $watermark_image is absolute path
+
        $this->Image2->source('img/screenshot.png', 'center')
               ->resizeit(500, 500, false)
-              ->watermark('img/croogo.png')
+              ->watermark('img/croogo.png', 'center', false)
               ->imagePath() // return /uploads/resized/croogo_png_center_0_0_500_500_resize_screenshot.png
 
 Positions:
