@@ -1,0 +1,66 @@
+#Croogo Image2 plugin for Croogo 1.4+
+
+This helper is modification of original Image helper boundled with Croogo. 
+This version support method chaining and watermark image
+
+## Requirements
+ * gdlib2
+
+## Installation
+ * download and copy this plugin to app/Plugin/Image2
+ * activate plugin in administration Extesions -> Plugins
+ * create folder for resized images, default is app/webroot/uploads/resized. You can change it in plugin bootstrap.php
+ * folder must have write permission
+
+## Example usage
+
+### Resize
+
+Classic "hard" resize
+
+       $this->Image2->source('img/screenshot.png')
+              ->resizeit(50, 50, false)
+              ->imagePath();  // return /uploads/resized/0_0_50_50_resize_screenshot.png
+
+Ratio resize
+
+       $this->Image2->source('img/screenshot.png')
+              ->resizeit(50, 50, true)
+              ->imagePath();  // return /uploads/resized/0_0_50_38_resize_screenshot.png
+
+### Crop
+
+Crop direct from original image
+
+       $this->Image2->source('img/screenshot.png')
+              ->crop(200, 100, false)
+              ->imagePath(); // return /uploads/resized/150_200_200_200_crop_screenshot.png
+
+Resize image to longest side and then crop
+
+       $this->Image2->source('img/screenshot.png')
+              ->crop(200, 100)
+              ->imagePath(); // return /uploads/resized/0_38_200_200_crop_screenshot.png
+
+### Watermark
+
+Watermark image in PNG format, support foralpha channel.
+
+       $this->Image2->source('img/screenshot.png', 'center')
+              ->resizeit(500, 500, false)
+              ->watermark('img/croogo.png')
+              ->imagePath() // return /uploads/resized/croogo_png_center_0_0_500_500_resize_screenshot.png
+
+Positions:
+ * center - center of the image, long size 70% of original image long side
+ * left bottom - not implemented yet
+ * right bottom - not implemented yet
+ * left top - not implemented yet 
+ * right top - not implemented yet
+
+
+## Backward compatibility
+
+"resize" method from previous version is supported
+       
+       $this->Image2->resize($path, $width, $height, $method = 'resizeRatio', $htmlAttributes = array(), $return = false, $server_path = false);
