@@ -36,7 +36,7 @@ Crop direct from original image
               ->crop(200, 100, false)
               ->imagePath(); // return /uploads/resized/150_200_200_200_crop_screenshot.png
 
-Resize image to longest side and then crop
+Resize image to longer side and then crop
 
        $this->Image2->source('img/screenshot.png')
               ->crop(200, 100)
@@ -44,7 +44,7 @@ Resize image to longest side and then crop
 
 ### Watermark
 
-Watermark image in PNG format, support foralpha channel.
+Watermark image in PNG format, support for alpha channel.
 
        $this-Image2->watermark($watermark_image, $position, $watermark_absolute)
 
