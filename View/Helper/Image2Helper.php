@@ -185,65 +185,64 @@ class Image2Helper extends AppHelper {
         *
         * @param string $watermark_image Watermark PNG image path related to webroot e.g. img/watermark.png
         * @param string $position (center, overlay, more will be added shortly)
-        * @param boolean $watermark_absolute true if is watermark path server absolute
+        * @param boolean $watermark_absolute_path true if is watermark path server absolute
         * @return object
         */
-       public function watermark($watermark_image, $position = 'center', $watermark_absolute = false) {
+       public function watermark($watermark_path, $position = 'center', $watermark_absolute_path = false) {
 
               $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp"); // used to determine image type                    
-              $original_path = $this->_cacheServerPath;
-              $original_sizes = $this->sizes;
 
               $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
               $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir . DS;
-              $cache_path = $cache_dir . Inflector::slug(basename($watermark_image)) . '_' . $position . '_'
-                      . basename($original_path);
+              $cache_path = $cache_dir . Inflector::slug(basename($watermark_path)) . '_' . $position . '_'
+                      . basename($this->_cacheServerPath);
               if (file_exists($cache_path)) {
-                     if (@filemtime($cache_path) > @filemtime($original_path)) {// check if up to date
+                     if (@filemtime($cache_path) > @filemtime($this->_cacheServerPath)) {// check if up to date
                             $this->_cacheServerPath = $cache_path;
                             return $this;
                      }
               }
 
+              $watermark = new Image2Helper($this->_View);
+
               switch ($position) {
                      
                      case "center":
-                            $watermark_width = ceil($original_sizes[0] * 0.7);
-                            $watermark_height = ceil($original_sizes[1] * 0.7);
+                            $watermark_width = ceil($this->sizes[0] * 0.7);
+                            $watermark_height = ceil($this->sizes[1] * 0.7);
                             $watermark_x = 5;
                             $watermark_y = 5;
-                            $watermark_ratio = true;
+
+                            $watermark->source($watermark_path, $watermark_absolute_path)
+                                   ->resizeit($watermark_width, $watermark_height, true);                            
                             break;
                      
                      case "overlay":
-                            $watermark_width = $original_sizes[0];
-                            $watermark_height = $original_sizes[1];
+                            $watermark_width = $this->sizes[0];
+                            $watermark_height = $this->sizes[1];
                             $watermark_x = 0;
                             $watermark_y = 0;
-                            $watermark_ratio = false;
-                            break;
-              }
-              
-              $this->source($watermark_image, $watermark_absolute);
-              $this->resizeit($watermark_width, $watermark_height, $watermark_ratio);
-              $watermark_path = $this->_cacheServerPath;
-              $watermark_sizes = $this->sizes;
 
-              $watermark = imagecreatefrompng($watermark_path);
-              $original = call_user_func('imagecreatefrom' . $types[$original_sizes[2]], $original_path);
+                            $watermark->source($watermark_path, $watermark_absolute_path)
+                                   ->resizeit($watermark_width, $watermark_height, false);                             
+                            break;
+              }              
+
+              $watermark_source = imagecreatefrompng($watermark->_cacheServerPath);
+              $original = call_user_func('imagecreatefrom' . $types[$this->sizes[2]], $this->_cacheServerPath);
 
               imagealphablending($original, true);
-              imagealphablending($watermark, false);
-              imagesavealpha($watermark, true);
+              imagealphablending($watermark_source, false);
+              imagesavealpha($watermark_source, true);
 
-              imagecopy($original, $watermark, $watermark_x, $watermark_y, 0, 0, $watermark_sizes[0], $watermark_sizes[1]);
-              if (call_user_func("image" . $types[$original_sizes[2]], $original, $cache_path)) {
-                     imagedestroy($watermark);
+              imagecopy($original, $watermark_source, $watermark_x, $watermark_y, 0, 0, $watermark->sizes[0], $watermark->sizes[1]);
+              if (call_user_func("image" . $types[$this->sizes[2]], $original, $cache_path)) {
+                     imagedestroy($watermark_source);
                      imagedestroy($original);
               }
 
               $this->_cacheServerPath = $cache_path;
-              $this->sizes = $original_sizes;
+              unset($watermark);
               return $this;
        }
        
