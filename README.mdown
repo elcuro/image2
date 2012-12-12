@@ -46,11 +46,11 @@ Resize image to longer side and then crop
 
 Watermark image in PNG format, support for alpha channel.
 
-       $this-Image2->watermark($watermark_image, $position, $watermark_absolute)
+       $this-Image2->watermark($watermark_image, $position, $watermark_absolute_path)
 
  * $watermark_image = path to watermark image
  * $position = position of watermark
- * $watermark_absolute = true if $watermark_image is absolute path
+ * $watermark_absolute_path = true if $watermark_image is absolute path
 
        $this->Image2->source('img/screenshot.png', 'center')
               ->resizeit(500, 500, false)
@@ -60,6 +60,7 @@ Watermark image in PNG format, support for alpha channel.
 Positions:
  * center - center of the image, long size 70% of original image long side
  * overlay - watermark image is resized to equal sizes as original
+ * pattern - watermark is croped to equal sizes as original, assume big pattern watermark
  * left bottom - not implemented yet
  * right bottom - not implemented yet
  * left top - not implemented yet 

@@ -122,8 +122,8 @@ class Image2Helper extends AppHelper {
                             $this->sizes[1] = round($height / $ratio_x);
                      }
               } else {
-                     $start_x = ($this->sizes[0] - $width) / 2;
-                     $start_y = ($this->sizes[1] - $height) / 2;
+                     $start_x = intval(($this->sizes[0] - $width) / 2);
+                     $start_y = intval(($this->sizes[1] - $height) / 2);
                      $this->sizes[0] = $width;
                      $this->sizes[1] = $height;
               }
@@ -152,7 +152,6 @@ class Image2Helper extends AppHelper {
                             $this->sizes = @getimagesize($cache_path);                            
                      }
               }
-
               if (!$this->_cacheServerPath) {
                      $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp"); // used to determine image type
                      $image = call_user_func('imagecreatefrom' . $types[$this->sizes[2]], $this->serverPath);
@@ -190,7 +189,11 @@ class Image2Helper extends AppHelper {
         */
        public function watermark($watermark_path, $position = 'center', $watermark_absolute_path = false) {
 
-              $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp"); // used to determine image type                    
+              if (!$this->_cacheServerPath) { 
+                     $this->_cacheServerPath = $this->serverPath; // because is first in chain
+              }
+
+              $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp");
 
               $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
               $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir . DS;
@@ -204,7 +207,6 @@ class Image2Helper extends AppHelper {
               }
 
               $watermark = new Image2Helper($this->_View);
-
               switch ($position) {
                      
                      case "center":
@@ -226,8 +228,17 @@ class Image2Helper extends AppHelper {
                             $watermark->source($watermark_path, $watermark_absolute_path)
                                    ->resizeit($watermark_width, $watermark_height, false);                             
                             break;
-              }              
 
+                     case "pattern":
+                            $watermark_width = $this->sizes[0];
+                            $watermark_height = $this->sizes[1];
+                            $watermark_x = 0;
+                            $watermark_y = 0;
+
+                            $watermark->source($watermark_path, $watermark_absolute_path)
+                                   ->crop($watermark_width, $watermark_height, false);
+                            break;                   
+              }              
               $watermark_source = imagecreatefrompng($watermark->_cacheServerPath);
               $original = call_user_func('imagecreatefrom' . $types[$this->sizes[2]], $this->_cacheServerPath);
 
