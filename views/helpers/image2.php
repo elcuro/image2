@@ -11,10 +11,262 @@
 class Image2Helper extends Helper {
 
         public $helpers = array('Html');
-        public $cacheDir = 'resized'; // relative to 'img'.DS
+
+       /**
+        * Cache filename
+        * 
+        * @var string
+        */
+       protected $_cacheServerPath = false;
+
+       /**
+        * Original image sizes
+        * 
+        * @var array
+        */
+       public $sizes = false;
+
+       /**
+        * Server path
+        * 
+        * @var string
+        */
+       public $serverPath = false;
+
+       /**
+        * Cache dir for "resize" method, relative to 'img'.DS
+        * retained for backward compatibility
+        * 
+        * @var array
+        */
+       public $cacheDir = 'resized';
+
+       /**
+        * Load image
+        *
+        * @param string $path Path to image relative to webroot
+        * @param boolean $absolute Path is absolute server path
+        * @return object $this
+        */
+       public function source($path = '', $absolute = false) {
+
+              $this->sizes = false;
+              $this->serverPath = false;
+              $this->_cacheServerPath = false;
+
+              if (!$absolute) {
+                     $path = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $path;
+              }
+              if ($this->sizes = @getimagesize($path)) {
+                     $this->serverPath = $path;
+              }
+              return $this;
+       }
+
+       /**
+        * Resize image
+        *
+        * @param integer $width
+        * @param integer $height
+        * @param boolean $ratio
+        * @return object
+        */
+       public function resizeit($width, $height, $ratio = true) {
+
+              if ($this->_cacheServerPath) {
+                     $this->source($this->_cacheServerPath, true);
+              }
+              if ($ratio) {
+                     if (($this->sizes[1] / $height) > ($this->sizes[0] / $width)) {
+                            $width = ceil(($this->sizes[0] / $this->sizes[1]) * $height);
+                     } else {
+                            $height = ceil($width / ($this->sizes[0] / $this->sizes[1]));
+                     }
+              }
+              $this->_nativeResize(0, 0, $width, $height, 'resize');
+              return $this;
+       }
+
+       /**
+        * Crop image
+        * 
+        * @param integer $width
+        * @param integer $height
+        * @param boolean $resize Resize image before croping
+        * @return object
+        */
+       public function crop($width, $height, $resize = true) {
+
+              if ($this->_cacheServerPath) {
+                     $this->source($this->_cacheServerPath, true);
+              }
+              if ($resize) {
+                     $ratio_x = $width / $this->sizes[0];
+                     $ratio_y = $height / $this->sizes[1];
+                     if (($ratio_y) > ($ratio_x)) {
+                            $start_x = round(($this->sizes[0] - ($width / $ratio_y)) / 2);
+                            $start_y = 0;
+                            $this->sizes[0] = round($width / $ratio_y);
+                     } else {
+                            $start_x = 0;
+                            $start_y = round(($this->sizes[1] - ($height / $ratio_x)) / 2);
+                            $this->sizes[1] = round($height / $ratio_x);
+                     }
+              } else {
+                     $start_x = intval(($this->sizes[0] - $width) / 2);
+                     $start_y = intval(($this->sizes[1] - $height) / 2);
+                     $this->sizes[0] = $width;
+                     $this->sizes[1] = $height;
+              }
+              $this->_nativeResize($start_x, $start_y, $width, $height, 'crop');
+              return $this;
+       }
+
+       /**
+        * Resample or resize and cache
+        *
+        * @param int $start_x;
+        * @param int $start_y;
+        * @param int $width;
+        * @param int $height
+        * @return void
+        */
+       protected function _nativeResize($start_x, $start_y, $width, $height, $method = 'na') {
+
+              $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
+              $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir . DS;
+
+              $cache_path = $cache_dir . implode('_', array($start_x, $start_y, $width, $height, $method, basename($this->serverPath)));
+              if (file_exists($cache_path)) {
+                     if (@filemtime($cache_path) >= @filemtime($this->serverPath)) {// check if up to date
+                            $this->_cacheServerPath = $cache_path;
+                            $this->sizes = @getimagesize($cache_path);                            
+                     }
+              }
+              if (!$this->_cacheServerPath) {
+                     $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp"); // used to determine image type
+                     $image = call_user_func('imagecreatefrom' . $types[$this->sizes[2]], $this->serverPath);
+                     if (function_exists("imagecreatetruecolor") && ($temp = imagecreatetruecolor($width, $height))) {
+                            if (function_exists('imagecolorallocatealpha')) {
+                                   imagealphablending($temp, false);
+                                   imagesavealpha($temp, true);
+                                   $transparent = imagecolorallocatealpha($temp, 255, 255, 255, 127);
+                                   imagefilledrectangle($temp, 0, 0, $this->sizes[0], $this->sizes[1], $transparent);
+                                   imagecopyresampled($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $this->sizes[0], $this->sizes[1]);
+                            } else {
+                                   imagecolortransparent($temp, imagecolorallocate($temp, 0, 0, 0));
+                                   imagecopyresampled($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $this->sizes[0], $this->sizes[1]);
+                            }
+                     } else {
+                            $temp = imagecreate($width, $height);
+                            imagecopyresized($temp, $image, 0, 0, $start_x, $start_y, $width, $height, $this->sizes[0], $this->sizes[1]);
+                     }
+                     if (call_user_func("image" . $types[$this->sizes[2]], $temp, $cache_path)) {
+                            imagedestroy($image);
+                            imagedestroy($temp);
+                            $this->_cacheServerPath = $cache_path;
+                            $this->sizes = @getimagesize($cache_path);
+                     }
+              }
+       }
+
+       /**
+        * Add watermark
+        *
+        * @param string $watermark_image Watermark PNG image path related to webroot e.g. img/watermark.png
+        * @param string $position (center, overlay, more will be added shortly)
+        * @param boolean $watermark_absolute_path true if is watermark path server absolute
+        * @return object
+        */
+       public function watermark($watermark_path, $position = 'center', $watermark_absolute_path = false) {
+
+              if (!$this->_cacheServerPath) { 
+                     $this->_cacheServerPath = $this->serverPath; // because is first in chain
+              }
+
+              $types = array(1 => "gif", "jpeg", "png", "swf", "psd", "wbmp");
+
+              $cache_dir = implode(DS, Configure::read('Image2.cacheDir'));
+              $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir . DS;
+              $cache_path = $cache_dir . Inflector::slug(basename($watermark_path)) . '_' . $position . '_'
+                      . basename($this->_cacheServerPath);
+              if (file_exists($cache_path)) {
+                     if (@filemtime($cache_path) > @filemtime($this->_cacheServerPath)) {// check if up to date
+                            $this->_cacheServerPath = $cache_path;
+                            return $this;
+                     }
+              }
+
+              $watermark = new Image2Helper();
+              switch ($position) {
+                     
+                     case "center":
+                            $watermark_width = ceil($this->sizes[0] * 0.7);
+                            $watermark_height = ceil($this->sizes[1] * 0.7);
+                            $watermark_x = 5;
+                            $watermark_y = 5;
+
+                            $watermark->source($watermark_path, $watermark_absolute_path)
+                                   ->resizeit($watermark_width, $watermark_height, true);                            
+                            break;
+                     
+                     case "overlay":
+                            $watermark_width = $this->sizes[0];
+                            $watermark_height = $this->sizes[1];
+                            $watermark_x = 0;
+                            $watermark_y = 0;
+
+                            $watermark->source($watermark_path, $watermark_absolute_path)
+                                   ->resizeit($watermark_width, $watermark_height, false);                             
+                            break;
+
+                     case "pattern":
+                            $watermark_width = $this->sizes[0];
+                            $watermark_height = $this->sizes[1];
+                            $watermark_x = 0;
+                            $watermark_y = 0;
+
+                            $watermark->source($watermark_path, $watermark_absolute_path)
+                                   ->crop($watermark_width, $watermark_height, false);
+                            break;                   
+              }              
+              $watermark_source = imagecreatefrompng($watermark->_cacheServerPath);
+              $original = call_user_func('imagecreatefrom' . $types[$this->sizes[2]], $this->_cacheServerPath);
+
+              imagealphablending($original, true);
+              imagealphablending($watermark_source, false);
+              imagesavealpha($watermark_source, true);
+
+              imagecopy($original, $watermark_source, $watermark_x, $watermark_y, 0, 0, $watermark->sizes[0], $watermark->sizes[1]);
+              if (call_user_func("image" . $types[$this->sizes[2]], $original, $cache_path)) {
+                     imagedestroy($watermark_source);
+                     imagedestroy($original);
+              }
+
+              $this->_cacheServerPath = $cache_path;
+              unset($watermark);
+              return $this;
+       }
+       
+       /**
+        * return filename in relative path for 
+        *
+        * @return string
+        */
+       public function imagePath() {
+              
+              $cache_dir = implode('/', Configure::read('Image2.cacheDir'));
+              return '/'.$cache_dir.'/'.basename($this->_cacheServerPath);
+       }        
+
+
+
+
+
 
         /**
         * Automatically resize (crop) an image and returns formatted IMG tag
+        * retained for backward compatibility
         *
         * @param string $path Path to the image file, relative to the webroot/img/ directory.
         * @param integer $width Image of returned image
