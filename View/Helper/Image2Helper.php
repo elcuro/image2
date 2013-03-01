@@ -267,6 +267,18 @@ class Image2Helper extends AppHelper {
               $cache_dir = implode('/', Configure::read('Image2.cacheDir'));
               return '/'.$cache_dir.'/'.basename($this->_cacheServerPath);
        }
+
+       /**
+        * return base64 data iniline image
+        *
+        * @return string
+        */
+       public function inlineImage() {
+              
+              $content = base64_encode(file_get_contents($this->_cacheServerPath));
+              $content = 'data:'.$this->sizes['mime'].';base64,'.$content;
+              return $content;
+       }       
        
        /**
         * Automatically resize (crop) an image and returns formatted IMG tag,

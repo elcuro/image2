@@ -184,8 +184,8 @@ class Image2HelperTest extends CakeTestCase {
               $cache_dir = ROOT . DS . APP_DIR . DS . WEBROOT_DIR . DS . $cache_dir .DS;              
               $expected_watermark_file = $cache_dir . '850_850_600_500_crop_watermark_pattern.png';
               $expected_image_file = $cache_dir . '674_652_952_895_crop_watermark_pattern.png';
-              $this->assertTrue(file_exists($expected_image_file));
-              $this->assertTrue(file_exists($expected_watermark_file));
+              $this->assertTrue(file_exists($expected_image_file), 'image file');
+              $this->assertTrue(file_exists($expected_watermark_file), 'watermark file');
        }               
 
        public function testWatermarkPatternFirstInChain() {
@@ -224,6 +224,17 @@ class Image2HelperTest extends CakeTestCase {
               $this->assertTrue(file_exists($expected_file));
               $this->assertEquals(220, $sizes[0]);
               $this->assertEquals(220, $sizes[1]);                  
+       }
+
+       public function testInlineImage() {
+
+              $source = App::pluginPath('Image2').'webroot'.DS.'img'.DS.'test'.DS.'doglovers.jpg';
+
+              $result = $this->Image2Helper->source($source, true)
+                     ->resizeit(100, 100)
+                     ->inlineImage();
+              $this->assertTrue(is_string($result));
+              $this->assertContains('data:image/jpeg;base64,', $result);
        }
 
        public function tearDown() {

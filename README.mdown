@@ -67,6 +67,15 @@ Positions:
  * right top - not implemented yet
 
 
+### Inline image
+
+Base64 encoded inline image 
+
+       $this->Image2->source('img/screenshot.png')
+              ->crop(200, 100, false)
+              ->inlineImage();  // return 'data:image/png;base64,i3fs.....'
+
+
 ## Backward compatibility
 
 "resize" method from previous version is supported
