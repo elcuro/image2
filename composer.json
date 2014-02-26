@@ -1,0 +1,7 @@
+{
+    "name": "elcuro/image2",
+    "type": "croogo-plugin",
+    "require": {
+        "composer/installers": "~1.0"
+    }
+}
